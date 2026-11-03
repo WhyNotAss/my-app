@@ -7,52 +7,118 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+# Laravel Tasks API
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+REST API для задач на Laravel. Работает в Docker через Laravel Sail: PHP, MySQL и Redis.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Что умеет
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- `GET /api/tasks/{id}` — получить задачу. В ответе есть поле `deadline_status` (`overdue`, `due_soon`, `on_track`). Ответ кэшируется в Redis на 60 секунд, флаг `cached` показывает, пришёл ответ из кэша или из базы.
+- `PATCH /api/tasks/{id}/status` — сменить статус задачи (`todo`, `in_progress`, `done`) с проверкой допустимых переходов. При успешной смене кэш задачи сбрасывается.
 
-## Learning Laravel
+## Требования
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Windows с WSL 2 и Ubuntu (или Linux/macOS)
+- Docker Desktop с включённой интеграцией с WSL
+- Проект лучше держать внутри файловой системы WSL, например в `~/projects`, а не на диске `C:`
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Запуск
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Все команды выполняются в терминале Ubuntu в папке проекта.
 
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+1. Клонировать репозиторий и перейти в папку проекта.
+2. Создать файл настроек: `cp .env.example .env`
+3. Установить зависимости одноразовым контейнером:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/var/www/html" -w /var/www/html laravelsail/php84-composer:latest composer install --ignore-platform-reqs
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+4. Запустить контейнеры: `./vendor/bin/sail up -d`
+5. Сгенерировать ключ приложения: `./vendor/bin/sail artisan key:generate`
+6. Применить миграции: `./vendor/bin/sail artisan migrate`
+7. Проверить в браузере: http://localhost
 
-## Contributing
+## Настройки `.env`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Важные значения для работы с Redis и базой:
 
-## Code of Conduct
+- `DB_HOST=mysql`
+- `REDIS_HOST=redis`
+- `CACHE_STORE=redis`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+После изменения `.env` выполнить `./vendor/bin/sail artisan config:clear`.
 
-## Security Vulnerabilities
+## API
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Во всех запросах нужен заголовок `Accept: application/json`, иначе ошибки валидации вернутся редиректом, а не кодом 422.
 
-## License
+### GET /api/tasks/{id}
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Ответ 200:
+
+```json
+{
+  "data": {
+    "id": 1,
+    "title": "Test",
+    "description": null,
+    "deadline": "2026-11-02T16:15:58.000000Z",
+    "status": "todo",
+    "deadline_status": "due_soon"
+  },
+  "cached": false
+}
+```
+
+При повторном запросе в течение 60 секунд `cached` будет `true`. Если задачи нет, ответ 404 и `{"message": "Task not found"}`.
+
+### PATCH /api/tasks/{id}/status
+
+Тело запроса:
+
+```json
+{"status": "in_progress"}
+```
+
+Ответы:
+
+- 200 — статус изменён, в ответе обновлённая задача.
+- 422 — значение не из списка, статус не передан или переход запрещён. При запрещённом переходе в ответе есть поле `allowed` со списком допустимых статусов.
+- 404 — задачи нет.
+
+## Правила переходов статусов
+
+- `todo` → `in_progress`
+- `in_progress` → `todo` или `done`
+- `done` → `in_progress`
+
+Переход из `done` в `todo` запрещён. Прямой переход `todo` → `done` тоже запрещён.
+
+## Как работает deadline_status
+
+Статус дедлайна хранится в колонке типа ENUM и пересчитывается при каждом сохранении задачи:
+
+- `overdue` — дедлайн уже прошёл;
+- `due_soon` — до дедлайна меньше суток;
+- `on_track` — дедлайн дальше чем через сутки.
+
+Если задачу не сохраняли, значение в базе со временем может устареть.
+
+## Как работает кэш
+
+- Ключ в Redis: `task:{id}`, время жизни 60 секунд.
+- Флаг `cached` добавляется только при отдаче ответа и в Redis не хранится.
+- Кэш сбрасывается при любом сохранении или удалении задачи через модель.
+
+## Проверка через Postman
+
+В репозитории лежит файл коллекции Postman. Импортируйте его через Import в Postman и запустите запросы по порядку. Адрес по умолчанию: `http://localhost/api`.
+
+## Полезные команды
+
+- `./vendor/bin/sail up -d` — запустить
+- `./vendor/bin/sail stop` — остановить
+- `./vendor/bin/sail artisan migrate` — миграции
+- `./vendor/bin/sail artisan route:list --path=api` — список API-роутов
+- `./vendor/bin/sail artisan tinker` — консоль PHP
