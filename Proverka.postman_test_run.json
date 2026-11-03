@@ -1,0 +1,176 @@
+{
+	"id": "0cf4a4c1-483d-4a7c-ad43-38dc90c86f46",
+	"name": "Proverka",
+	"timestamp": "2026-11-03T11:08:21.173Z",
+	"collection_id": "59084064-b2a78870-d72d-454d-9d30-3205322da1ac",
+	"folder_id": 0,
+	"environment_id": "0",
+	"totalPass": 0,
+	"delay": 0,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2026-11-03T11:08:20.633Z",
+	"totalFail": 0,
+	"results": [
+		{
+			"id": "d594bdd8-4597-4541-8cee-66305325644c",
+			"name": "999/status\": \"done",
+			"url": "http://localhost/api/tasks/999/status",
+			"time": 22,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				22
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "191edb16-2231-42e0-b647-2af62f148187",
+			"name": "GET",
+			"url": "http://localhost/api/tasks/1?Accept=application/json",
+			"time": 24,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				24
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "6aa931a9-e46a-4a98-b833-af64d3494297",
+			"name": "status\": \"foo",
+			"url": "http://localhost/api/tasks/1/status",
+			"time": 33,
+			"responseCode": {
+				"code": 422,
+				"name": "Unprocessable Content"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				33
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "4a407a09-46a7-4360-b077-1e705d7846c0",
+			"name": "status\": \"in_progress",
+			"url": "http://localhost/api/tasks/1/status",
+			"time": 13,
+			"responseCode": {
+				"code": 422,
+				"name": "Unprocessable Content"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				13
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "a42bb74e-b4c6-43a7-986a-13511326ad08",
+			"name": "status\": \"done",
+			"url": "http://localhost/api/tasks/1/status",
+			"time": 22,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				22
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "89a5c0ec-a19c-4523-9e98-44185253a84e",
+			"name": "status\": \"todo",
+			"url": "http://localhost/api/tasks/1/status",
+			"time": 13,
+			"responseCode": {
+				"code": 422,
+				"name": "Unprocessable Content"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				13
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "c3da91dc-64ed-4498-a308-dee2eb939f32",
+			"name": "status\": \"in_progress",
+			"url": "http://localhost/api/tasks/1/status",
+			"time": 34,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				34
+			],
+			"allTests": [
+				{}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 161,
+	"collection": {
+		"requests": [
+			{
+				"id": "d594bdd8-4597-4541-8cee-66305325644c",
+				"method": "PATCH"
+			},
+			{
+				"id": "191edb16-2231-42e0-b647-2af62f148187",
+				"method": "GET"
+			},
+			{
+				"id": "6aa931a9-e46a-4a98-b833-af64d3494297",
+				"method": "PATCH"
+			},
+			{
+				"id": "4a407a09-46a7-4360-b077-1e705d7846c0",
+				"method": "PATCH"
+			},
+			{
+				"id": "a42bb74e-b4c6-43a7-986a-13511326ad08",
+				"method": "PATCH"
+			},
+			{
+				"id": "89a5c0ec-a19c-4523-9e98-44185253a84e",
+				"method": "PATCH"
+			},
+			{
+				"id": "c3da91dc-64ed-4498-a308-dee2eb939f32",
+				"method": "PATCH"
+			}
+		]
+	}
+}
