@@ -17,8 +17,10 @@ class TaskFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            //
+         return [
+            'title' => fake()->sentence(3),
+            'description' => fake()->sentence(),
+            'deadline' => now()->addDays(7),
         ];
     }
 }
