@@ -122,3 +122,19 @@ docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/var/www/html" -w /var/www/htm
 - `./vendor/bin/sail artisan migrate` — миграции
 - `./vendor/bin/sail artisan route:list --path=api` — список API-роутов
 - `./vendor/bin/sail artisan tinker` — консоль PHP
+## Очередь и просроченные задачи
+
+Для очереди используется Redis (`QUEUE_CONNECTION=redis`).
+
+- Команда `./vendor/bin/sail artisan tasks:mark-overdue` находит задачи с прошедшим дедлайном и ставит для каждой job `MarkTaskOverdue` в очередь.
+- Job обновляет `deadline_status` на `overdue` и добавляет запись в таблицу `task_overdue_logs`. Повторный запуск для той же задачи ничего не дублирует.
+- Команда запускается планировщиком раз в минуту (`routes/console.php`). На сервере нужен cron: `* * * * * cd /path/to/project && php artisan schedule:run`.
+- Воркер очереди: `./vendor/bin/sail artisan queue:work redis --tries=3`. В разработке планировщик запускается командой `./vendor/bin/sail artisan schedule:work`.
+
+## Рейт-лимит логина
+
+`POST /api/login` ограничен до 5 попыток в минуту на пару email + IP. При превышении возвращается `429`. Счётчики хранятся в Redis.
+
+## Формат ответов
+
+Задачи отдаются через `TaskResource`. `GET /api/tasks` возвращает коллекцию с ключами `data`, `links`, `meta`.

@@ -6,15 +6,15 @@ use App\Enums\TaskStatus;
 use App\Http\Requests\ListTasksRequest;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskStatusRequest;
+use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
-use App\Http\Resources\TaskResource;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cache;
 
 class TaskController extends Controller
 {
-    public function index(ListTasksRequest $request): JsonResponse
+    public function index(ListTasksRequest $request): AnonymousResourceCollection
     {
         $v = $request->validated();
 
@@ -33,8 +33,8 @@ class TaskController extends Controller
         $task = Task::create($request->validated());
 
         return (new TaskResource($task->refresh()))
-        ->response()
-        ->setStatusCode(201);
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function show(int $id): JsonResponse

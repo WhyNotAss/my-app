@@ -18,7 +18,7 @@ class MarkOverdueTasks extends Command
     {
         Task::whereNotNull('deadline')
             ->where('deadline', '<', now())
-            ->where('status', '!=', TaskStatus::DONE->value)
+            ->where(fn ($q) => $q->whereNull('status')->orWhere('status', '!=', TaskStatus::DONE->value))
             ->where('deadline_status', '!=', DeadlinesStatus::OVERDUE->value)
             ->select('id')
             ->chunkById(500, function ($tasks) {

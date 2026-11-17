@@ -7,4 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class TaskOverdueLog extends Model
 {
     protected $fillable = ['task_id', 'overdue_at'];
+    protected $casts = [
+        'overdue_at' => 'datetime',
+    ];
 }
