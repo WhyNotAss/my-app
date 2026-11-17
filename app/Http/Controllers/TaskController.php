@@ -9,6 +9,8 @@ use App\Http\Requests\UpdateTaskStatusRequest;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
+use App\Http\Resources\TaskResource;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TaskController extends Controller
 {
@@ -23,14 +25,16 @@ class TaskController extends Controller
             ->paginate($v['per_page'] ?? 15)
             ->withQueryString();
 
-        return response()->json($tasks);
+        return TaskResource::collection($tasks);
     }
 
     public function store(StoreTaskRequest $request): JsonResponse
     {
         $task = Task::create($request->validated());
 
-        return response()->json(['data' => $task->refresh()], 201);
+        return (new TaskResource($task->refresh()))
+        ->response()
+        ->setStatusCode(201);
     }
 
     public function show(int $id): JsonResponse
@@ -47,7 +51,7 @@ class TaskController extends Controller
             return response()->json(['message' => 'Task not found'], 404);
         }
 
-        $data = $task->toArray();
+        $data = (new TaskResource($task))->resolve();
         Cache::put($key, $data, 60);
 
         return response()->json(['data' => $data, 'cached' => false]);
@@ -72,6 +76,6 @@ class TaskController extends Controller
         $task->status = $newStatus;
         $task->save();
 
-        return response()->json(['data' => $task]);
+        return (new TaskResource($task))->response();
     }
 }
